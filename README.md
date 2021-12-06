@@ -5,7 +5,7 @@ If you don't find pybind11 directory or its files, please run this command.
 
 See `https://git-scm.com/book/en/v2/Git-Tools-Submodules` for more information on how to work with sub-modules
 
-## Run the tes
+## Run the test code
 
 If you want to run the test, only run:
 ```
