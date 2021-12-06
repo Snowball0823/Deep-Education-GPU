@@ -5,13 +5,11 @@ If you don't find pybind11 directory or its files, please run this command.
 
 See `https://git-scm.com/book/en/v2/Git-Tools-Submodules` for more information on how to work with sub-modules
 
-## Compilation
+## Run the tes
+
+If you want to run the test, only run:
 ```
-cd kernel
-make
-cd ../dl_python_code/
-cmake ../kernel/
-make
+bash run_gcn.sh
 ```
 
 

@@ -1,0 +1,8 @@
+tmp.txt
+__pycache__
+dl_python_code/*.so
+dl_python_code/pybind*
+dl_python_code/CMake*
+dl_python_code/*.txt
+dl_python_code/*.cmake
+dl_python_code/Makefile

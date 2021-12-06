@@ -109,6 +109,36 @@ __device__ inline op_scalar_fn get_fn_kernel(op_t op) {
 __global__ void spmm(const csr_t* __restrict__ obj1, float* x, float * y, op_t op, const bool reverse, const bool norm, const int dim) 
 {
     //TODO
+    int current_row = blockIdx.x * blockDim.x + threadIdx.x;
+    // int row = rows_num * ( blockIdx.x * blockDim.x + threadIdx.x );
+    // printf("BlockIdx:%d, blockDim:%d, threadIdx:%d\n", blockIdx.x, blockDim.x, threadIdx.x);
+    // printf("We are good\n");
+    vid_t degree, nebr_value;
+    vid_t *nebrs;
+    float *row_weight;
+    if (current_row >= obj1->v){return;}
+    float *input_row = x + dim * current_row;
+    float *output_row = y + dim * current_row;
+    // // if reverse and norm, then input/degree
+    degree = obj1->get_nebrs(current_row, nebrs);
+    if (reverse == true && norm == true && degree > 1){
+            for (vid_t i = 0; i < dim; i++){input_row[i] /= degree;}
+    }
+
+    for (vid_t i = 0; i < dim; i++){
+        output_row[i] = input_row[i];
+        for (vid_t j = 0; j < degree; j++){
+            // nebr_value = obj1->get_vid(nebrs, j);
+            nebr_value = nebrs[j];
+            row_weight = x + dim * (int)nebr_value;
+            output_row[i] += row_weight[i];
+        }
+    }
+
+    // if reverse and norm, then output/degree
+    if (reverse == true && norm == true && degree > 1){
+            for (vid_t i = 0; i < dim; i++){output_row[i] /= degree;}
+    }
 }
 
 //warp per row (best)
@@ -117,12 +147,14 @@ __global__ void spmm_warp(const csr_t* __restrict__ obj1, float* x, float * y, o
     //TODO
 }
 
-void invoke_spmm(csr_t * obj1, array2d_t < float > & x1, array2d_t < float > & y1, op_t op, bool reverse, bool norm, int dim) {
-    int warp_size=32;
-    int block_size=1024;
-    int nBlocks =  0; // TODO 
-    spmm_warp <<<nBlocks,block_size>>> (obj1, x1.data_ptr, y1.data_ptr, op, true, true, dim);
 
+void invoke_spmm(csr_t * obj1, array2d_t < float > & x1, array2d_t < float > & y1, op_t op, bool reverse, bool norm, int dim) {
+    int warp_size = 32;
+    int block_size = 1024;
+    int nBlocks = (int)ceil(obj1->v/(float)block_size);
+    // int nBlocks = (int)ceil(obj1->v/(float)(block_size/warp_size)); // TODO 
+    spmm <<<nBlocks,block_size>>> (obj1, x1.data_ptr, y1.data_ptr, op, reverse, true, dim);
+    // spmm_warp <<<nBlocks,block_size>>> (obj1, x1.data_ptr, y1.data_ptr, op, reverse, true, dim);
     cudaDeviceSynchronize();
 }
 
